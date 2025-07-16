@@ -36,7 +36,7 @@ function App() {
       })
 
       if (!res.ok) {
-        throw new error("Server res error!")
+        throw new Error("Server res error!")
       }
 
       const data = await res.json()
