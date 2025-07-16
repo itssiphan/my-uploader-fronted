@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
-import './App.css';
+import React, { useState, useRef } from "react";
+import "./App.css";
 
 function App() {
   const [videoFile, setVideoFile] = useState(null);
   const [jsonFile, setJsonFile] = useState(null);
   const [isUploading, setIsUploading] = useState("Upload");
   const [message, setMessage] = useState("");
+  const videoInputRef = useRef(null); // Ref for video input
+  const jsonInputRef = useRef(null); // Ref for JSON input
 
   const handleVideo = (e) => {
     let selectedFile = e.target.files[0];
@@ -14,14 +16,34 @@ function App() {
 
   const handleJson = (e) => {
     let selectedFile = e.target.files[0];
-    setJsonFile(selectedFile);
+    if (selectedFile) {
+      // Validate JSON file
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const jsonData = JSON.parse(event.target.result);
+          if (!jsonData.title || !jsonData.description || !jsonData.tags) {
+            alert("JSON file must contain title, description, and tags!");
+            setJsonFile(null);
+            jsonInputRef.current.value = null;
+          } else {
+            setJsonFile(selectedFile);
+          }
+        } catch (err) {
+          alert("Invalid JSON file!");
+          setJsonFile(null);
+          jsonInputRef.current.value = null;
+        }
+      };
+      reader.readAsText(selectedFile);
+    }
   };
 
   const handleUpload = async () => {
     setIsUploading("Uploading...");
 
     if (!videoFile || !jsonFile) {
-      alert("Select video and json file!");
+      alert("Select video and JSON file!");
       setIsUploading("Upload");
       return;
     }
@@ -38,19 +60,23 @@ function App() {
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error("Server res error!");
+        throw new Error(data.error || "Server response error!");
       }
 
-      console.log("Success", data);
-      console.log(`🎉 Video uploaded successfully:\n ${data.title}`);
+      console.log("🎉 Success", data);
       setIsUploading("Uploaded");
-      setMessage("Video uploaded ✅", data.name);
+      setMessage(`Video uploaded ✅: ${data.title || "Untitled"}`);
 
+      // Reset file inputs and state
+      setVideoFile(null);
+      setJsonFile(null);
+      videoInputRef.current.value = null;
+      jsonInputRef.current.value = null;
     } catch (error) {
       console.error("Upload failed ❌:", error);
-      alert("Upload failed. Please try again!");
-      setIsUploading("Retry");
-      setMessage(`Upload failed ❌: ${error}`);
+      alert(`Upload failed: ${error.message}`);
+      setMessage(`Upload failed ❌: ${error.message}`);
+      setIsUploading("Try again");
     }
   };
 
@@ -72,6 +98,7 @@ function App() {
             <label className="block text-lg text-[#ff0000] font-medium mb-1">Select Video (.mp4)</label>
           </div>
           <input
+            ref={videoInputRef}
             onChange={handleVideo}
             type="file"
             accept=".mp4"
@@ -92,6 +119,7 @@ function App() {
             <label className="block text-lg text-[#ff0000] font-medium mb-1">Select JSON</label>
           </div>
           <input
+            ref={jsonInputRef}
             onChange={handleJson}
             type="file"
             accept=".json"
@@ -100,15 +128,25 @@ function App() {
         </div>
         <button
           onClick={handleUpload}
-          disabled={!videoFile || !jsonFile}
-          className={`w-full text-my-3 py-[10px] px-4 rounded-xl text-white ${
-            !videoFile || !jsonFile ? "bg-gray-300 cursor-not-allowed" : "bg-green-500 cursor-pointer hover:bg-green-700"
+          disabled={!videoFile || !jsonFile || isUploading === "Uploading..."}
+          className={`w-full my-2 text-white py-2 rounded-lg font-semibold ${
+            isUploading === "Uploaded"
+              ? "bg-green-600 cursor-default"
+              : !videoFile || !jsonFile || isUploading === "Uploading..."
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-green-600 cursor-pointer hover:bg-green-700"
           }`}
         >
           {isUploading}
         </button>
       </div>
-      <div className={!message ? "bg-red-100" : "py-1 px-3 text-red-500 my-5"}>{message && `${message}`}</div>
+      <div
+        className={`py-1 px-3 my-5 ${
+          !message ? "bg-red-100" : message.includes("failed") ? "bg-red-50 text-red-500" : "text-green-500"
+        }`}
+      >
+        {message && message}
+      </div>
     </div>
   );
 }
