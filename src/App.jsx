@@ -48,7 +48,7 @@ function App() {
       <div className="h-full overflow-hidden">
         <div className="h-full flex overflow-x-hidden scale-125 flex-col justify-center items-center">
           <div className="flex items-center gap-2 mb-7 w-[257px]">
-            <h1 className="text-2xl text-red-500 font-bold">YouTube Uploader</h1>
+            <h1 className="text-2xl text-red-500 font-bold">Siphan App</h1>
             <span className="text-3xl">⭕</span>
           </div>
           <div className="flex flex-col p-5 w-[275px] h-[400px] justify-center gap-3 rounded-lg bg-white drop-shadow-sm">
