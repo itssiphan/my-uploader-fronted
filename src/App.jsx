@@ -60,7 +60,7 @@ function App() {
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.message || data.error || "Server response error!");
+        throw new Error("Server response error!");
 
       console.log("🎉 Success", data);
       setIsUploading("Uploaded");
