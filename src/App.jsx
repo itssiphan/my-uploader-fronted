@@ -1,119 +1,107 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useState } from 'react';
 import './App.css';
 
 function App() {
-  const [video, setVideo] = useState(null);
+  const [videoFile, setVideoFile] = useState(null);
   const [jsonFile, setJsonFile] = useState(null);
-  const [uploading, setUploading] = useState(false);
-  const [message, setMessage] = useState('');
+  const [uploadStatus, setUploadStatus] = useState("Upload");
+  const [message, setMessage] = useState("");
 
-  const handleVideoChange = (e) => {
-    const selectedFile = e.target.files[0];
-    setVideo(selectedFile);
-    console.log('Selected Video:', selectedFile);
+  const handleVideo = (e) => {
+    const file = e.target.files[0];
+    setVideoFile(file);
   };
 
-  const handleJsonChange = (e) => {
-    const selectedFile = e.target.files[0];
-    setJsonFile(selectedFile);
-    console.log('Selected JSON:', selectedFile);
+  const handleJson = (e) => {
+    const file = e.target.files[0];
+    setJsonFile(file);
   };
 
   const handleUpload = async () => {
-    if (!video || !jsonFile) {
-      setMessage('Please select both a video and a JSON file!');
+    if (!videoFile || !jsonFile) {
+      alert("Please select both a video and a JSON file!");
       return;
     }
 
-    setUploading(true);
-    setMessage('');
-    const formData = new FormData();
-    formData.append('video', video);
-    formData.append('json', jsonFile);
+    setUploadStatus("Uploading...");
+    setMessage("");
 
     try {
-       const response = await axios.post('https://my-uploader-bakend.onrender.com/upload', formData, {
-  headers: { 'Content-Type': 'multipart/form-data' },
+      const formData = new FormData();
+      formData.append("video", videoFile);
+      formData.append("json", jsonFile);
+
+      const res = await fetch("https://my-uploader-bakend.onrender.com/upload", {
+        method: "POST",
+        body: formData,
       });
-      setMessage(
-        `Video uploaded successfully! Title: ${response.data.title} | Watch: https://youtu.be/${response.data.videoId}`
-      );
-    } catch (error) {
-      setMessage('Upload failed: ' + error.message);
-    } finally {
-      setUploading(false);
+
+      if (!res.ok) {
+        throw new Error(`Server Error: ${res.status}`);
+      }
+
+      const data = await res.json();
+      setUploadStatus("Uploaded ✅");
+      setMessage(`Video uploaded! 🎉 Title: ${data.title} | Watch: https://youtu.be/${data.videoId}`);
+
+      // Clear files
+      setVideoFile(null);
+      setJsonFile(null);
+    } catch (err) {
+      console.error("Upload Error:", err);
+      setUploadStatus("Retry");
+      setMessage(`Upload failed ❌: ${err.message}`);
     }
   };
 
-  useEffect(() => {
-    console.log('Video:', video);
-    console.log('JSON File:', jsonFile);
-  }, [video, jsonFile]);
-
   return (
-    <>
-      <div className="h-full overflow-hidden">
-        <div className="h-full flex overflow-x-hidden scale-125 flex-col justify-center items-center">
-          <div className="flex items-center gap-2 mb-7 w-[257px]">
-            <h1 className="text-2xl text-red-500 font-bold">YouTube Uploader</h1>
-            <span className="text-3xl">⭕</span>
-          </div>
-          <div className="flex flex-col p-5 w-[275px] h-[400px] justify-center gap-3 rounded-lg bg-white drop-shadow-sm">
-            <div className="flex flex-col justify-start items-start">
-              <div className="flex items-center gap-2">
-                <img src="./public/youtube_activity_24dp_1F1F1F_FILL0_wght400_GRAD0_opsz24.svg" alt="" />
-                <label className="block mb-1 text-lg font-medium text-gray-700">Select Video (.mp4)</label>
-              </div>
-              <input
-                onChange={handleVideoChange}
-                type="file"
-                accept=".mp4"
-                className="ml-1 mb-3 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-              />
-              {video && (
-                <details className="text-lg ml-2 line-clamp-3 text-red-500 -mb-2">
-                  <summary>Video</summary>
-                  {video.name}
-                </details>
-              )}
-            </div>
-            <div className="flex flex-col justify-start items-start">
-              <div className="flex items-center gap-2">
-                <img src="./public/data_object_24dp_1F1F1F_FILL0_wght400_GRAD0_opsz24.svg" alt="" />
-                <label className="block mb-1 text-lg font-medium text-gray-700">Select JSON</label>
-              </div>
-              <input
-                onChange={handleJsonChange}
-                type="file"
-                accept=".json"
-                className="ml-1 mb-3 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-              />
-              {jsonFile && (
-                <details className="text-lg ml-2 text-red-500">
-                  <summary>JSON</summary>
-                  {jsonFile.name}
-                </details>
-              )}
-            </div>
-            <button
-              onClick={handleUpload}
-              disabled={uploading || !video || !jsonFile}
-              className={`w-full mb-2 py-2 px-4 rounded text-black font-semibold ${
-                uploading || !video || !jsonFile ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600'
-              }`}
-            >
-              {uploading ? 'Uploading...' : 'Upload'}
-            </button>
-            {message && (
-              <p className={`text-sm ${message.includes('failed') ? 'text-red-500' : 'text-green-500'}`}>
-                {message}
-              </p>
-            )}
-          </div>
+    <div className="min-h-screen bg-lime-50 flex flex-col items-center justify-center p-4">
+      <h2 className="text-4xl my-5 font-bold text-center text-green-400">Siphan App 🚀</h2>
+
+      <div className="bg-white drop-shadow-lg rounded-2xl p-6 w-full max-w-md flex flex-col gap-5">
+        <div className="space-y-1">
+          <label className="block text-lg text-[#ff0000] font-medium mb-1">Select Video (.mp4)</label>
+          <input
+            onChange={handleVideo}
+            type="file"
+            accept=".mp4"
+            className="block w-full text-gray-600 file:mr-4 file:py-2 file:px-4 file:border-0 file:rounded-lg file:bg-green-100 file:text-green-600 hover:file:bg-green-200"
+          />
+          {videoFile && <p className="text-sm text-blue-600 truncate">🎥 {videoFile.name}</p>}
         </div>
+
+        <div className="space-y-1">
+          <label className="block text-lg text-[#ff0000] font-medium mb-1">Select JSON File</label>
+          <input
+            onChange={handleJson}
+            type="file"
+            accept=".json"
+            className="block w-full text-gray-600 file:mr-4 file:py-2 file:px-4 file:border-0 file:rounded-lg file:bg-green-100 file:text-green-600 hover:file:bg-green-200"
+          />
+          {jsonFile && <p className="text-sm text-blue-600 truncate">📄 {jsonFile.name}</p>}
+        </div>
+
+        <button
+          onClick={handleUpload}
+          disabled={!videoFile || !jsonFile || uploadStatus === "Uploading..."}
+          className={`w-full my-3 py-[10px] px-4 rounded-xl text-white font-semibold ${
+            !videoFile || !jsonFile || uploadStatus === "Uploading..."
+              ? "bg-gray-300 cursor-not-allowed"
+              : "bg-green-500 hover:bg-green-700"
+          }`}
+        >
+          {uploadStatus}
+        </button>
       </div>
-    </>
+
+      {message && (
+        <div className="mt-5 text-center max-w-md px-4 py-2 rounded bg-white shadow">
+          <p className={message.includes("failed") ? "text-red-500" : "text-green-600"}>
+            {message}
+          </p>
+        </div>
+      )}
+    </div>
   );
 }
 
