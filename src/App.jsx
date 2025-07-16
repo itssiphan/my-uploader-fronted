@@ -27,7 +27,7 @@ function App() {
     formData.append('video', video);
     formData.append('json', jsonFile);
     try {
-      const response = await axios.post('http://localhost:5000/upload', formData, {
+      const response = await axios.post('https://my-uploader-bakend.onrender.co/upload, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       setMessage(
